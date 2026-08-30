@@ -88,6 +88,8 @@
     .view-toggle {
       display: flex;
       gap: .35rem;
+      flex-wrap: wrap;
+      justify-content: flex-end;
     }
 
     .view-btn {
@@ -674,10 +676,148 @@
     .streak-pill.weekend { background: #EEF2FF; color: #3730A3; }
     .streak-text { font-size: .84rem; color: var(--navy); font-weight: 500; }
 
+    /* ── Weekly Schedule view ── */
+    .wk-card {
+      background: white; border-radius: 16px;
+      box-shadow: 0 1px 4px rgba(0,0,0,.07), 0 4px 16px rgba(0,0,0,.04);
+      margin-bottom: 1.2rem; overflow: hidden;
+    }
+
+    .wk-hdr {
+      padding: 1rem 1.35rem .85rem;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: baseline; justify-content: space-between;
+      gap: .6rem; flex-wrap: wrap;
+    }
+
+    .wk-title { font-size: 1.05rem; font-weight: 800; color: var(--navy); }
+    .wk-sub   { font-size: .73rem; color: var(--muted); }
+
+    .wk-legend {
+      display: flex; flex-wrap: wrap; gap: .55rem 1.2rem;
+      padding: .7rem 1.35rem; background: #FAFBFC;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .wk-legend-item { display: flex; align-items: center; gap: .42rem; font-size: .75rem; color: var(--navy); }
+    .wk-legend-name { font-weight: 700; }
+    .wk-legend-sub  { color: var(--muted); font-weight: 500; font-size: .72rem; }
+    .wk-swatch { width: 13px; height: 13px; border-radius: 4px; flex-shrink: 0; }
+
+    /* Grid */
+    .wk-scroll { overflow-x: auto; }
+    .wk-grid   { min-width: 820px; --wk-h: 620px; padding-bottom: 11px; } /* room for the 9:00 tick */
+
+    .wk-row { display: grid; grid-template-columns: 62px repeat(5, 1fr); }
+
+    .wk-corner {
+      background: #F8FAFC; border-bottom: 1px solid var(--border);
+      display: flex; align-items: flex-end; justify-content: flex-end;
+      padding: 0 .5rem .5rem 0;
+      font-size: .6rem; font-weight: 700; letter-spacing: .08em; color: var(--muted);
+    }
+
+    .wk-dayhead {
+      background: #F8FAFC;
+      border-left: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: .55rem .45rem .5rem; text-align: center;
+    }
+
+    .wk-dayhead.is-hot { background: #FBEFEF; }
+    .wk-dayname { font-size: .8rem; font-weight: 800; color: var(--navy); }
+
+    .wk-load {
+      display: inline-flex; align-items: center; gap: .3rem;
+      margin-top: .3rem; padding: .15rem .5rem;
+      border-radius: 100px; font-size: .59rem; font-weight: 800;
+      letter-spacing: .06em; text-transform: uppercase; white-space: nowrap;
+    }
+
+    .wk-load-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+    .wk-daystat  { font-size: .62rem; color: var(--muted); margin-top: .26rem; line-height: 1.35; }
+
+    .wk-axis { position: relative; height: var(--wk-h); }
+
+    .wk-tick {
+      position: absolute; right: .5rem; transform: translateY(-50%);
+      font-size: .63rem; color: #898781; font-variant-numeric: tabular-nums; white-space: nowrap;
+    }
+
+    .wk-lane {
+      position: relative; height: var(--wk-h);
+      border-left: 1px solid var(--border);
+    }
+
+    .wk-lane.is-hot { background: #FDF6F6; }
+
+    .wk-line { position: absolute; left: 0; right: 0; height: 1px; background: #F1F3F6; pointer-events: none; }
+    .wk-line.is-hour { background: #E4E7EC; }
+
+    .wk-free {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: .72rem; font-weight: 700; color: #86A98B; letter-spacing: .04em;
+    }
+
+    .wk-ev {
+      position: absolute;
+      border-radius: 7px; border-left: 3px solid;
+      padding: .28rem .38rem;
+      font-size: .7rem; line-height: 1.25;
+      overflow: hidden;
+    }
+
+    .wk-grid.is-tight .wk-ev { font-size: .655rem; padding: .24rem .3rem; }
+
+    /* Names/activities ellipsis rather than crop in a narrow lane —
+       the full text stays in the hover tooltip and the Full list table. */
+    .wk-ev-who, .wk-ev-what { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .wk-ev-who  { font-weight: 800; }
+    .wk-ev-what { font-weight: 600; }
+    .wk-ev-time { font-size: .62rem; opacity: .78; font-variant-numeric: tabular-nums; margin-top: .1rem; }
+
+    .wk-ev.is-clash { outline: 2px solid #d03b3b; outline-offset: -2px; }
+
+    /* Insights */
+    .wk-insight {
+      display: flex; align-items: flex-start; gap: .8rem;
+      padding: .8rem 1.35rem; border-bottom: 1px solid #F4F6F8;
+    }
+
+    .wk-insight:last-child { border-bottom: none; }
+    .wk-insight-day { font-size: .84rem; font-weight: 800; color: var(--navy); width: 82px; flex-shrink: 0; }
+    .wk-insight-body { flex: 1; }
+
+    .wk-chips { display: flex; flex-wrap: wrap; gap: .3rem; margin-top: .3rem; }
+
+    .wk-chip {
+      font-size: .68rem; font-weight: 600; color: #475569;
+      background: #F1F5F9; border-radius: 100px; padding: .16rem .55rem;
+    }
+
+    .wk-chip.is-alert { background: #FBEAEA; color: #8E2020; font-weight: 700; }
+
+    /* Table view */
+    .wk-table { width: 100%; border-collapse: collapse; font-size: .8rem; }
+    .wk-table th {
+      text-align: left; padding: .5rem 1.35rem; background: #F8FAFC;
+      font-size: .62rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted);
+      border-bottom: 1px solid var(--border);
+    }
+    .wk-table td { padding: .5rem 1.35rem; border-bottom: 1px solid #F4F6F8; color: var(--navy); }
+    .wk-table tr:last-child td { border-bottom: none; }
+    .wk-table td.wk-td-time { font-variant-numeric: tabular-nums; color: var(--muted); white-space: nowrap; }
+    .wk-table tbody tr.is-daystart td { border-top: 1px solid var(--border); }
+    .wk-who-cell { display: flex; align-items: center; gap: .42rem; font-weight: 700; }
+
     /* ── Responsive ── */
     @media (max-width: 600px) {
       .cal-day { min-height: 72px; }
       .type-grid { grid-template-columns: repeat(3, 1fr); }
+      .wk-grid { --wk-h: 520px; }
+      .wk-insight-day { width: 100%; }
+      .wk-insight { flex-direction: column; gap: .3rem; }
     }
   </style>
 </head>
@@ -696,6 +836,7 @@
     <button class="view-btn active" id="btnScroll"   onclick="setView('scroll')">📅 Scroll</button>
     <button class="view-btn"        id="btnOverview" onclick="setView('overview')">🗓 Overview</button>
     <button class="view-btn"        id="btnSummary"  onclick="setView('summary')">📋 Summary</button>
+    <button class="view-btn"        id="btnWeekly"   onclick="setView('weekly')">📆 Weekly Schedule</button>
     <button class="sync-btn" id="sync-btn" onclick="syncToGitHub()">
       <span class="sync-icon">↑</span> Sync <span class="sync-dot" id="sync-dot"></span>
     </button>
@@ -719,8 +860,11 @@
 <!-- ── Summary View ── -->
 <div id="summaryView" class="view-wrap" style="display:none"></div>
 
+<!-- ── Weekly Schedule View ── -->
+<div id="weeklyView" class="view-wrap" style="display:none"></div>
+
 <!-- ── FAB ── -->
-<button class="fab" onclick="openModal()" title="Add Event">＋</button>
+<button class="fab" id="fab" onclick="openModal()" title="Add Event">＋</button>
 
 <!-- ── Modal ── -->
 <div class="overlay hidden" id="overlay" onclick="overlayClick(event)">
@@ -1205,6 +1349,302 @@ function calcFreeWeekends() {
   return out;
 }
 
+// ── Weekly after-school schedule ──────────────────────────
+// Edit WEEK_ACTIVITIES to change the weekly grid. Times are 24h "HH:MM".
+const WK_DAYS   = ['Mon','Tue','Wed','Thu','Fri'];
+const WK_FULL   = { Mon:'Monday', Tue:'Tuesday', Wed:'Wednesday', Thu:'Thursday', Fri:'Friday' };
+const WK_START  = 14*60 + 30;   // 2:30 PM
+const WK_END    = 21*60;        // 9:00 PM
+const WK_SPAN   = WK_END - WK_START;
+
+// Categorical slots 1–3 (blue / orange / aqua) — validated for colorblind separation.
+const PEOPLE = {
+  K:  { name:'Kalia', color:'#2a78d6', bg:'#E9F1FC', ink:'#1A4E8A' },
+  ML: { name:'ML',    color:'#eb6834', bg:'#FDEDE5', ink:'#8E3A14' },
+  KJ: { name:'KJ',    color:'#1baf7a', bg:'#E4F6EF', ink:'#0B5A3F' },
+};
+
+const WEEK_ACTIVITIES = [
+  { who:'K',  what:'Volleyball', days:['Mon','Tue','Wed','Thu'], start:'14:30', end:'17:30' },
+  { who:'K',  what:'Dance',      days:['Tue','Thu'],             start:'19:00', end:'20:45' },
+  { who:'ML', what:'Volleyball', days:['Mon','Wed'],             start:'15:15', end:'16:45' },
+  { who:'ML', what:'Dance',      days:['Tue'],                   start:'16:00', end:'17:20' },
+  { who:'ML', what:'Dance',      days:['Thu'],                   start:'16:00', end:'17:45' },
+  { who:'ML', what:'Soccer',     days:['Tue','Thu'],             start:'17:30', end:'18:30' },
+  { who:'KJ', what:'Soccer',     days:['Tue'],                   start:'18:30', end:'19:30' },
+];
+
+const WK_TIERS = {
+  heaviest: { label:'Heaviest', dot:'#d03b3b', bg:'#FBEAEA', ink:'#8E2020' },
+  heavy:    { label:'Heavy',    dot:'#ec835a', bg:'#FCEFE8', ink:'#8A4520' },
+  moderate: { label:'Moderate', dot:'#fab219', bg:'#FDF6E3', ink:'#7A5605' },
+  open:     { label:'Open',     dot:'#0ca30c', bg:'#E9F7E9', ink:'#14631A' },
+};
+
+function wkMin(s)  { const [h,m] = s.split(':').map(Number); return h*60 + m; }
+function wkT(m)    { const h = Math.floor(m/60), mm = m%60; return `${((h+11)%12)+1}:${String(mm).padStart(2,'0')}`; }
+function wkTA(m)   { return wkT(m) + (m < 720 ? ' AM' : ' PM'); }
+function wkDur(m)  { const h = Math.floor(m/60), mm = m%60; return h ? (mm ? `${h}h ${mm}m` : `${h}h`) : `${mm}m`; }
+
+// Expand the activity list into per-day events
+function wkEvents() {
+  const byDay = {};
+  WK_DAYS.forEach(d => byDay[d] = []);
+  WEEK_ACTIVITIES.forEach(a => {
+    a.days.forEach(d => {
+      if (byDay[d]) byDay[d].push({ who:a.who, what:a.what, s:wkMin(a.start), e:wkMin(a.end) });
+    });
+  });
+  WK_DAYS.forEach(d => byDay[d].sort((a,b) => a.s - b.s || b.e - a.e));
+  return byDay;
+}
+
+// One lane per person present that day (fixed left→right order), sub-split when
+// the same person is booked twice at once — so a real conflict reads as a split lane.
+function wkLayout(evs) {
+  const present = Object.keys(PEOPLE).filter(w => evs.some(v => v.who === w));
+  const out = [];
+  present.forEach((who, lane) => {
+    const mine = evs.filter(v => v.who === who);
+    const subs = [];
+    mine.forEach(v => {
+      let placed = false;
+      for (let c = 0; c < subs.length; c++) {
+        if (subs[c][subs[c].length-1].e <= v.s) { subs[c].push(v); v.sub = c; placed = true; break; }
+      }
+      if (!placed) { subs.push([v]); v.sub = subs.length - 1; }
+    });
+    mine.forEach(v => { v.lane = lane; v.lanes = present.length; v.subs = subs.length; out.push(v); });
+  });
+  return out;
+}
+
+// Logistics load for one day
+function wkMetrics(evs) {
+  if (!evs.length) return { count:0, score:0, stops:0, splitMin:0, maxAt:0, tight:[], clashes:[], span:0 };
+
+  const stops = new Set();
+  evs.forEach(v => { stops.add(v.s); stops.add(v.e); });
+
+  // minutes with two or more running at once + peak simultaneous
+  const bounds = [...stops].sort((a,b) => a - b);
+  let splitMin = 0, maxAt = 0;
+  for (let i = 0; i < bounds.length - 1; i++) {
+    const a = bounds[i], b = bounds[i+1];
+    const n = evs.filter(v => v.s < b && v.e > a).length;
+    if (n > maxAt) maxAt = n;
+    if (n >= 2) splitMin += b - a;
+  }
+
+  // same person booked in two places at once
+  const clashes = [];
+  for (let i = 0; i < evs.length; i++) for (let j = i + 1; j < evs.length; j++) {
+    const a = evs[i], b = evs[j];
+    if (a.who === b.who && a.s < b.e && b.s < a.e)
+      clashes.push({ who:a.who, s:Math.max(a.s,b.s), e:Math.min(a.e,b.e), a, b });
+  }
+
+  // tight handoffs: 2+ drop-offs/pickups for different kids inside 15 minutes
+  const pts = [];
+  evs.forEach(v => {
+    pts.push({ t:v.s, kind:'drop-off', who:v.who, what:v.what });
+    pts.push({ t:v.e, kind:'pickup',   who:v.who, what:v.what });
+  });
+  pts.sort((a,b) => a.t - b.t);
+  const tight = [];
+  let grp = [];
+  const flush = () => {
+    if (grp.length >= 2 && new Set(grp.map(p => p.who)).size >= 2) tight.push(grp);
+    grp = [];
+  };
+  pts.forEach(p => {
+    if (grp.length && p.t - grp[grp.length-1].t > 15) flush();
+    grp.push(p);
+  });
+  flush();
+
+  const dblMin = clashes.reduce((n,c) => n + (c.e - c.s), 0);
+  const first  = Math.min(...evs.map(v => v.s)), last = Math.max(...evs.map(v => v.e));
+  const score  = evs.length*2 + stops.size + Math.round(splitMin/30) + tight.length*4 + (dblMin ? 8 : 0);
+
+  return { count:evs.length, score, stops:stops.size, splitMin, maxAt, tight, clashes, dblMin, first, last, span:last-first };
+}
+
+function wkTier(score, max) {
+  if (!score) return WK_TIERS.open;
+  if (score >= max * 0.85) return WK_TIERS.heaviest;
+  if (score >= max * 0.5)  return WK_TIERS.heavy;
+  return WK_TIERS.moderate;
+}
+
+function renderWeekly() {
+  const byDay = wkEvents();
+  const met   = {}; WK_DAYS.forEach(d => met[d] = wkMetrics(byDay[d]));
+  const max   = Math.max(1, ...WK_DAYS.map(d => met[d].score));
+  const tier  = {}; WK_DAYS.forEach(d => tier[d] = wkTier(met[d].score, max));
+  const maxLanes = Math.max(...WK_DAYS.map(d => new Set(byDay[d].map(v => v.who)).size));
+
+  // ── Legend ──
+  const legend = Object.entries(PEOPLE).map(([k,p]) => {
+    const acts = [...new Set(WEEK_ACTIVITIES.filter(a => a.who === k).map(a => a.what))].join(' · ');
+    return `<div class="wk-legend-item">
+      <div class="wk-swatch" style="background:${p.color}"></div>
+      <span class="wk-legend-name" style="color:${p.ink}">${p.name}</span>
+      <span class="wk-legend-sub">${acts}</span>
+    </div>`;
+  }).join('');
+
+  // ── Header row ──
+  let head = `<div class="wk-corner">PM</div>`;
+  WK_DAYS.forEach(d => {
+    const m = met[d], t = tier[d], hot = t === WK_TIERS.heaviest;
+    const stat = m.count
+      ? `${m.count} activit${m.count === 1 ? 'y' : 'ies'} · ${wkT(m.first)}–${wkT(m.last)}`
+      : 'Nothing scheduled';
+    head += `<div class="wk-dayhead ${hot ? 'is-hot' : ''}">
+      <div class="wk-dayname">${WK_FULL[d]}</div>
+      <div class="wk-load" style="background:${t.bg};color:${t.ink}">
+        <span class="wk-load-dot" style="background:${t.dot}"></span>${t.label}
+      </div>
+      <div class="wk-daystat">${stat}</div>
+    </div>`;
+  });
+
+  // ── Time axis ──
+  let axis = '';
+  for (let m = WK_START; m <= WK_END; m += 30) {
+    const pct = (m - WK_START) / WK_SPAN * 100;
+    if (m % 60 === 0 || m === WK_START)
+      axis += `<div class="wk-tick" style="top:${pct.toFixed(3)}%">${wkT(m)}</div>`;
+  }
+
+  // ── Day lanes ──
+  let lanes = `<div class="wk-axis">${axis}</div>`;
+  WK_DAYS.forEach(d => {
+    const hot = tier[d] === WK_TIERS.heaviest;
+    let cells = '';
+    for (let m = WK_START; m <= WK_END; m += 30) {
+      const pct = (m - WK_START) / WK_SPAN * 100;
+      cells += `<div class="wk-line ${m % 60 === 0 ? 'is-hour' : ''}" style="top:${pct.toFixed(3)}%"></div>`;
+    }
+
+    const clashed = new Set();
+    met[d].clashes.forEach(c => { clashed.add(c.a); clashed.add(c.b); });
+
+    if (!byDay[d].length) {
+      cells += `<div class="wk-free">Free</div>`;
+    } else {
+      wkLayout(byDay[d]).forEach(v => {
+        const p     = PEOPLE[v.who];
+        const top   = (v.s - WK_START) / WK_SPAN * 100;
+        const hgt   = (v.e - v.s) / WK_SPAN * 100;
+        const width = 100 / (v.lanes * v.subs);
+        const left  = (v.lane / v.lanes + v.sub / (v.subs * v.lanes)) * 100;
+        const clash = clashed.has(v);
+        const tip   = `${p.name} · ${v.what} · ${wkTA(v.s)}–${wkTA(v.e)} (${wkDur(v.e - v.s)})`
+                    + (clash ? ` — overlaps another ${p.name} activity` : '');
+        cells += `<div class="wk-ev${clash ? ' is-clash' : ''}" title="${tip}"
+          style="top:calc(${top.toFixed(3)}% + 2px);height:calc(${hgt.toFixed(3)}% - 4px);
+                 left:calc(${left.toFixed(3)}% + 3px);width:calc(${width.toFixed(3)}% - 6px);
+                 background:${p.bg};border-left-color:${p.color};color:${p.ink};">
+          <div class="wk-ev-who">${p.name}${clash ? ' ⚠' : ''}</div>
+          <div class="wk-ev-what">${v.what}</div>
+          <div class="wk-ev-time">${wkT(v.s)}–${wkT(v.e)}</div>
+        </div>`;
+      });
+    }
+    lanes += `<div class="wk-lane ${hot ? 'is-hot' : ''}">${cells}</div>`;
+  });
+
+  // ── Why these nights are heavy ──
+  const ranked = [...WK_DAYS].sort((a,b) => met[b].score - met[a].score);
+  const insights = ranked.map(d => {
+    const m = met[d], t = tier[d];
+    let chips = '';
+    if (!m.count) {
+      chips = `<span class="wk-chip">No activities — the one open weeknight</span>`;
+    } else {
+      chips += `<span class="wk-chip">${m.count} activit${m.count === 1 ? 'y' : 'ies'}</span>`;
+      chips += `<span class="wk-chip">${wkDur(m.span)} window · ${wkTA(m.first)}–${wkTA(m.last)}</span>`;
+      chips += `<span class="wk-chip">${m.stops} drop-off/pickup time${m.stops === 1 ? '' : 's'}</span>`;
+      if (m.splitMin) chips += `<span class="wk-chip">${m.maxAt} places at once for ${wkDur(m.splitMin)}</span>`;
+      m.clashes.forEach(c => {
+        chips += `<span class="wk-chip is-alert">⚠ ${PEOPLE[c.who].name} double-booked ${wkT(c.s)}–${wkTA(c.e)}
+          (${c.a.what} vs ${c.b.what})</span>`;
+      });
+      m.tight.forEach(g => {
+        const who  = [...new Set(g.map(p => `${PEOPLE[p.who].name} ${p.kind}`))].join(' + ');
+        const a = g[0].t, b = g[g.length-1].t;
+        const when = a === b ? `at ${wkTA(a)}` : `${wkT(a)}–${wkTA(b)}`;
+        chips += `<span class="wk-chip is-alert">Tight handoff ${when}: ${who}</span>`;
+      });
+    }
+    return `<div class="wk-insight">
+      <div class="wk-insight-day">${WK_FULL[d]}</div>
+      <div class="wk-insight-body">
+        <div class="wk-load" style="background:${t.bg};color:${t.ink};margin-top:0">
+          <span class="wk-load-dot" style="background:${t.dot}"></span>${t.label}
+        </div>
+        <div class="wk-chips">${chips}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // ── Table view (every value readable without color) ──
+  let rows = '';
+  WK_DAYS.forEach(d => {
+    if (!byDay[d].length) {
+      rows += `<tr class="is-daystart"><td>${WK_FULL[d]}</td>
+        <td colspan="4" style="color:var(--muted)">Nothing scheduled</td></tr>`;
+      return;
+    }
+    byDay[d].forEach((v, i) => {
+      const p = PEOPLE[v.who];
+      rows += `<tr class="${i === 0 ? 'is-daystart' : ''}">
+        <td>${i === 0 ? WK_FULL[d] : ''}</td>
+        <td><div class="wk-who-cell"><span class="wk-swatch" style="background:${p.color}"></span>${p.name}</div></td>
+        <td>${v.what}</td>
+        <td class="wk-td-time">${wkTA(v.s)} – ${wkTA(v.e)}</td>
+        <td class="wk-td-time">${wkDur(v.e - v.s)}</td>
+      </tr>`;
+    });
+  });
+
+  document.getElementById('weeklyView').innerHTML = `
+    <div class="wk-card">
+      <div class="wk-hdr">
+        <div>
+          <div class="wk-title">Weekly After-School Schedule</div>
+          <div class="wk-sub">Monday–Friday · 2:30–9:00 PM · all times PM</div>
+        </div>
+        <div class="wk-sub">Overlapping activities sit side-by-side · heaviest nights tinted</div>
+      </div>
+      <div class="wk-legend">${legend}</div>
+      <div class="wk-scroll">
+        <div class="wk-grid ${maxLanes >= 3 ? 'is-tight' : ''}">
+          <div class="wk-row">${head}</div>
+          <div class="wk-row">${lanes}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="wk-card">
+      <div class="wk-hdr"><div>
+        <div class="wk-title">Where the pressure is</div>
+        <div class="wk-sub">Ranked by activities, overlap, and how many handoffs land close together</div>
+      </div></div>
+      ${insights}
+    </div>
+
+    <div class="wk-card">
+      <div class="wk-hdr"><div><div class="wk-title">Full list</div></div></div>
+      <table class="wk-table">
+        <thead><tr><th>Day</th><th>Who</th><th>Activity</th><th>Time</th><th>Length</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+}
+
 // ── Zoom ──────────────────────────────────────────────────
 function applyZoom(val) {
   const v = parseInt(val);
@@ -1219,14 +1659,17 @@ function applyZoom(val) {
 // ── View switching ────────────────────────────────────────
 function setView(v) {
   view=v;
-  ['scroll','overview','summary'].forEach(k=>{
+  ['scroll','overview','summary','weekly'].forEach(k=>{
     document.getElementById('btn'+k.charAt(0).toUpperCase()+k.slice(1)).classList.toggle('active',k===v);
     document.getElementById(k+'View').style.display=k===v?'block':'none';
   });
   document.getElementById('zoomBar').style.display = v==='scroll' ? 'flex' : 'none';
+  // The ＋ button adds travel/commitment events — not part of the weekly grid
+  document.getElementById('fab').style.display = v==='weekly' ? 'none' : 'flex';
   if (v==='scroll')   { renderScroll(); applyZoom(document.getElementById('zoomSlider').value); }
   if (v==='overview') renderOverview();
   if (v==='summary')  renderSummary();
+  if (v==='weekly')   renderWeekly();
 }
 
 // ── Type selector ─────────────────────────────────────────
@@ -1332,6 +1775,7 @@ function refresh() {
   if (view==='scroll')   { renderScroll(); applyZoom(document.getElementById('zoomSlider').value); }
   if (view==='overview') renderOverview();
   if (view==='summary')  renderSummary();
+  if (view==='weekly')   renderWeekly();
 }
 
 document.addEventListener('keydown',e=>{ if (e.key==='Escape') closeModal(); });
