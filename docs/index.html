@@ -704,6 +704,28 @@
     .wk-legend-sub  { color: var(--muted); font-weight: 500; font-size: .72rem; }
     .wk-swatch { width: 13px; height: 13px; border-radius: 4px; flex-shrink: 0; }
 
+    /* Legend chips double as the person filter */
+    .wk-toggle {
+      display: flex; align-items: center; gap: .42rem;
+      font-size: .75rem; color: var(--navy); font-family: inherit;
+      background: white; border: 1.5px solid var(--border);
+      border-radius: 100px; padding: .3rem .7rem .3rem .55rem;
+      cursor: pointer; transition: border-color .12s, background .12s, opacity .12s;
+    }
+
+    .wk-toggle:hover { border-color: #94A3B8; }
+
+    /* Off state is carried by the hollow swatch + struck name, not by color alone */
+    .wk-toggle.is-off { background: #F8FAFC; opacity: .72; }
+    .wk-toggle.is-off .wk-legend-name { color: var(--muted); text-decoration: line-through; }
+    .wk-toggle.is-off .wk-legend-sub  { text-decoration: line-through; }
+
+    .wk-showall {
+      font-size: .72rem; font-weight: 700; font-family: inherit;
+      color: var(--navy); background: none; border: none;
+      cursor: pointer; text-decoration: underline; padding: .3rem .2rem;
+    }
+
     /* Grid */
     .wk-scroll { overflow-x: auto; }
     .wk-grid   { min-width: 820px; --wk-h: 620px; padding-bottom: 11px; } /* room for the 9:00 tick */
@@ -778,6 +800,11 @@
     .wk-ev-time { font-size: .62rem; opacity: .78; font-variant-numeric: tabular-nums; margin-top: .1rem; }
 
     .wk-ev.is-clash { outline: 2px solid #d03b3b; outline-offset: -2px; }
+
+    /* Unavailable, not an activity — hatched, quieter, italic label.
+       Capped so a lone busy block never fills an otherwise-free day. */
+    .wk-ev.is-busy { border-left-style: dotted; border-left-width: 4px; max-width: 104px; }
+    .wk-ev.is-busy .wk-ev-what { font-style: italic; font-weight: 700; letter-spacing: .03em; }
 
     /* Insights */
     .wk-insight {
@@ -1357,13 +1384,20 @@ const WK_START  = 14*60 + 30;   // 2:30 PM
 const WK_END    = 21*60;        // 9:00 PM
 const WK_SPAN   = WK_END - WK_START;
 
-// Categorical slots 1–3 (blue / orange / aqua) — validated for colorblind separation.
+// Colors are fixed per person and never reassigned — filtering someone out
+// must not repaint anyone else. The four hues validate all-pairs for colorblind
+// separation; JC's slate is a deliberate neutral outside the categorical ramp.
 const PEOPLE = {
   K:  { name:'Kalia', color:'#2a78d6', bg:'#E9F1FC', ink:'#1A4E8A' },
   ML: { name:'ML',    color:'#eb6834', bg:'#FDEDE5', ink:'#8E3A14' },
   KJ: { name:'KJ',    color:'#1baf7a', bg:'#E4F6EF', ink:'#0B5A3F' },
+  CC: { name:'CC',    color:'#4a3aa7', bg:'#ECEAF7', ink:'#332876' },
+  JC: { name:'JC',    color:'#52514e', bg:'#EFEEEC', ink:'#3A3936' },
 };
 
+// kind:'busy' = unavailable, not an activity. Busy blocks are drawn but do not
+// count as activities and create no drop-off/pickup — change kind to 'activity'
+// if the block should count as a commitment someone has to be driven to.
 const WEEK_ACTIVITIES = [
   { who:'K',  what:'Volleyball', days:['Mon','Tue','Wed','Thu'], start:'14:30', end:'17:30' },
   { who:'K',  what:'Dance',      days:['Tue','Thu'],             start:'19:00', end:'20:45' },
@@ -1372,7 +1406,25 @@ const WEEK_ACTIVITIES = [
   { who:'ML', what:'Dance',      days:['Thu'],                   start:'16:00', end:'17:45' },
   { who:'ML', what:'Soccer',     days:['Tue','Thu'],             start:'17:30', end:'18:30' },
   { who:'KJ', what:'Soccer',     days:['Tue'],                   start:'18:30', end:'19:30' },
+  { who:'CC', what:'Busy',       days:['Mon','Wed','Fri'],       start:'14:30', end:'15:30', kind:'busy' },
 ];
+
+// ── Person filter ──
+const WK_HIDDEN_KEY = 'wk-hidden';
+let wkHidden = new Set();
+try { wkHidden = new Set(JSON.parse(localStorage.getItem(WK_HIDDEN_KEY) || '[]')); } catch(e) {}
+
+function wkToggle(who) {
+  if (wkHidden.has(who)) wkHidden.delete(who); else wkHidden.add(who);
+  localStorage.setItem(WK_HIDDEN_KEY, JSON.stringify([...wkHidden]));
+  renderWeekly();
+}
+
+function wkShowAll() {
+  wkHidden.clear();
+  localStorage.setItem(WK_HIDDEN_KEY, '[]');
+  renderWeekly();
+}
 
 const WK_TIERS = {
   heaviest: { label:'Heaviest', dot:'#d03b3b', bg:'#FBEAEA', ink:'#8E2020' },
@@ -1392,7 +1444,8 @@ function wkEvents() {
   WK_DAYS.forEach(d => byDay[d] = []);
   WEEK_ACTIVITIES.forEach(a => {
     a.days.forEach(d => {
-      if (byDay[d]) byDay[d].push({ who:a.who, what:a.what, s:wkMin(a.start), e:wkMin(a.end) });
+      if (byDay[d] && !wkHidden.has(a.who))
+        byDay[d].push({ who:a.who, what:a.what, kind:a.kind || 'activity', s:wkMin(a.start), e:wkMin(a.end) });
     });
   });
   WK_DAYS.forEach(d => byDay[d].sort((a,b) => a.s - b.s || b.e - a.e));
@@ -1419,9 +1472,12 @@ function wkLayout(evs) {
   return out;
 }
 
-// Logistics load for one day
-function wkMetrics(evs) {
-  if (!evs.length) return { count:0, score:0, stops:0, splitMin:0, maxAt:0, tight:[], clashes:[], span:0 };
+// Logistics load for one day. Busy blocks mean "unavailable" — they are not a
+// place anyone gets driven to, so they carry no stops and no load.
+function wkMetrics(all) {
+  const busy = all.filter(v => v.kind === 'busy');
+  const evs  = all.filter(v => v.kind !== 'busy');
+  if (!evs.length) return { count:0, score:0, stops:0, splitMin:0, maxAt:0, tight:[], clashes:[], span:0, busy };
 
   const stops = new Set();
   evs.forEach(v => { stops.add(v.s); stops.add(v.e); });
@@ -1467,7 +1523,7 @@ function wkMetrics(evs) {
   const first  = Math.min(...evs.map(v => v.s)), last = Math.max(...evs.map(v => v.e));
   const score  = evs.length*2 + stops.size + Math.round(splitMin/30) + tight.length*4 + (dblMin ? 8 : 0);
 
-  return { count:evs.length, score, stops:stops.size, splitMin, maxAt, tight, clashes, dblMin, first, last, span:last-first };
+  return { count:evs.length, score, stops:stops.size, splitMin, maxAt, tight, clashes, dblMin, first, last, span:last-first, busy };
 }
 
 function wkTier(score, max) {
@@ -1484,15 +1540,18 @@ function renderWeekly() {
   const tier  = {}; WK_DAYS.forEach(d => tier[d] = wkTier(met[d].score, max));
   const maxLanes = Math.max(...WK_DAYS.map(d => new Set(byDay[d].map(v => v.who)).size));
 
-  // ── Legend ──
+  // ── Legend doubles as the person filter ──
   const legend = Object.entries(PEOPLE).map(([k,p]) => {
+    const on   = !wkHidden.has(k);
     const acts = [...new Set(WEEK_ACTIVITIES.filter(a => a.who === k).map(a => a.what))].join(' · ');
-    return `<div class="wk-legend-item">
-      <div class="wk-swatch" style="background:${p.color}"></div>
-      <span class="wk-legend-name" style="color:${p.ink}">${p.name}</span>
-      <span class="wk-legend-sub">${acts}</span>
-    </div>`;
-  }).join('');
+    return `<button class="wk-toggle ${on ? '' : 'is-off'}" onclick="wkToggle('${k}')"
+        aria-pressed="${on}" title="${on ? 'Hide' : 'Show'} ${p.name}">
+      <span class="wk-swatch" style="${on ? `background:${p.color}` : `box-shadow:inset 0 0 0 2px ${p.color}`}"></span>
+      <span class="wk-legend-name" style="${on ? `color:${p.ink}` : ''}">${p.name}</span>
+      <span class="wk-legend-sub">${acts || 'nothing scheduled'}</span>
+    </button>`;
+  }).join('')
+  + (wkHidden.size ? `<button class="wk-showall" onclick="wkShowAll()">Show all ${wkHidden.size} hidden</button>` : '');
 
   // ── Header row ──
   let head = `<div class="wk-corner">PM</div>`;
@@ -1500,7 +1559,9 @@ function renderWeekly() {
     const m = met[d], t = tier[d], hot = t === WK_TIERS.heaviest;
     const stat = m.count
       ? `${m.count} activit${m.count === 1 ? 'y' : 'ies'} · ${wkT(m.first)}–${wkT(m.last)}`
-      : 'Nothing scheduled';
+      : (m.busy.length
+          ? `No activities · ${[...new Set(m.busy.map(x => PEOPLE[x.who].name))].join(', ')} busy`
+          : 'Nothing scheduled');
     head += `<div class="wk-dayhead ${hot ? 'is-hot' : ''}">
       <div class="wk-dayname">${WK_FULL[d]}</div>
       <div class="wk-load" style="background:${t.bg};color:${t.ink}">
@@ -1532,7 +1593,7 @@ function renderWeekly() {
     met[d].clashes.forEach(c => { clashed.add(c.a); clashed.add(c.b); });
 
     if (!byDay[d].length) {
-      cells += `<div class="wk-free">Free</div>`;
+      cells += `<div class="wk-free">${wkHidden.size === Object.keys(PEOPLE).length ? 'No one selected' : 'Free'}</div>`;
     } else {
       wkLayout(byDay[d]).forEach(v => {
         const p     = PEOPLE[v.who];
@@ -1541,14 +1602,19 @@ function renderWeekly() {
         const width = 100 / (v.lanes * v.subs);
         const left  = (v.lane / v.lanes + v.sub / (v.subs * v.lanes)) * 100;
         const clash = clashed.has(v);
-        const tip   = `${p.name} · ${v.what} · ${wkTA(v.s)}–${wkTA(v.e)} (${wkDur(v.e - v.s)})`
+        const busy  = v.kind === 'busy';
+        const tip   = `${p.name} · ${busy ? 'Unavailable' : v.what} · ${wkTA(v.s)}–${wkTA(v.e)} (${wkDur(v.e - v.s)})`
                     + (clash ? ` — overlaps another ${p.name} activity` : '');
-        cells += `<div class="wk-ev${clash ? ' is-clash' : ''}" title="${tip}"
+        // Busy reads as a hatched band so it never looks like somewhere to drive to
+        const fill = busy
+          ? `background:repeating-linear-gradient(135deg, ${p.bg} 0 7px, #FFFFFF 7px 14px)`
+          : `background:${p.bg}`;
+        cells += `<div class="wk-ev${clash ? ' is-clash' : ''}${busy ? ' is-busy' : ''}" title="${tip}"
           style="top:calc(${top.toFixed(3)}% + 2px);height:calc(${hgt.toFixed(3)}% - 4px);
                  left:calc(${left.toFixed(3)}% + 3px);width:calc(${width.toFixed(3)}% - 6px);
-                 background:${p.bg};border-left-color:${p.color};color:${p.ink};">
+                 ${fill};border-left-color:${p.color};color:${p.ink};">
           <div class="wk-ev-who">${p.name}${clash ? ' ⚠' : ''}</div>
-          <div class="wk-ev-what">${v.what}</div>
+          <div class="wk-ev-what">${busy ? 'Busy' : v.what}</div>
           <div class="wk-ev-time">${wkT(v.s)}–${wkT(v.e)}</div>
         </div>`;
       });
@@ -1561,9 +1627,17 @@ function renderWeekly() {
   const insights = ranked.map(d => {
     const m = met[d], t = tier[d];
     let chips = '';
+    // Who is unavailable, and whether that lands on a drop-off/pickup
+    const busyChips = m.busy.map(b => {
+      const covered = [...new Set(byDay[d].filter(v => v.kind !== 'busy').flatMap(v => [v.s, v.e]))]
+        .filter(t => t >= b.s && t <= b.e).length;
+      return `<span class="wk-chip">${PEOPLE[b.who].name} unavailable until ${wkTA(b.e)}`
+        + (covered ? ` — spans ${covered} drop-off/pickup time${covered === 1 ? '' : 's'}` : '') + `</span>`;
+    }).join('');
     if (!m.count) {
-      chips = `<span class="wk-chip">No activities — the one open weeknight</span>`;
+      chips = `<span class="wk-chip">No activities${m.busy.length ? '' : ' — an open weeknight'}</span>` + busyChips;
     } else {
+      chips += busyChips;
       chips += `<span class="wk-chip">${m.count} activit${m.count === 1 ? 'y' : 'ies'}</span>`;
       chips += `<span class="wk-chip">${wkDur(m.span)} window · ${wkTA(m.first)}–${wkTA(m.last)}</span>`;
       chips += `<span class="wk-chip">${m.stops} drop-off/pickup time${m.stops === 1 ? '' : 's'}</span>`;
