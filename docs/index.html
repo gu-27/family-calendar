@@ -1502,16 +1502,24 @@ const PEOPLE = {
 // kind:'busy' = unavailable, not an activity. Busy blocks are drawn but do not
 // count as activities and create no drop-off/pickup — change kind to 'activity'
 // if the block should count as a commitment someone has to be driven to.
+// `until` = last date the season runs. Dance and CC's block have no end date
+// yet, so they carry none and read as ongoing.
 const WEEK_ACTIVITIES = [
-  { who:'K',  what:'Volleyball', days:['Mon','Tue','Wed','Thu'], start:'14:30', end:'17:30' },
+  { who:'K',  what:'Volleyball', days:['Mon','Tue','Wed','Thu'], start:'14:30', end:'17:30', until:'2026-10-28' },
   { who:'K',  what:'Dance',      days:['Tue','Thu'],             start:'19:00', end:'20:45' },
-  { who:'ML', what:'Volleyball', days:['Mon','Wed'],             start:'15:15', end:'16:45' },
+  { who:'ML', what:'Volleyball', days:['Mon','Wed'],             start:'15:15', end:'16:45', until:'2026-10-28' },
   { who:'ML', what:'Dance',      days:['Tue'],                   start:'16:00', end:'17:20' },
   { who:'ML', what:'Dance',      days:['Thu'],                   start:'16:00', end:'17:45' },
-  { who:'ML', what:'Soccer',     days:['Tue','Thu'],             start:'17:30', end:'18:30' },
-  { who:'KJ', what:'Soccer',     days:['Tue'],                   start:'18:30', end:'19:30' },
+  { who:'ML', what:'Soccer',     days:['Tue','Thu'],             start:'17:30', end:'18:30', until:'2026-10-03' },
+  { who:'KJ', what:'Soccer',     days:['Tue'],                   start:'18:30', end:'19:30', until:'2026-10-03' },
   { who:'CC', what:'Busy',       days:['Mon','Wed','Fri'],       start:'14:30', end:'15:30', kind:'busy' },
 ];
+
+// "2026-10-28" -> "Oct 28"
+function wkUntil(u) {
+  if (!u) return '';
+  return parseDs(u).toLocaleDateString('en-US', { month:'short', day:'numeric' });
+}
 
 // ── Person filter ──
 const WK_HIDDEN_KEY = 'wk-hidden';
@@ -1549,7 +1557,8 @@ function wkEvents() {
   WEEK_ACTIVITIES.forEach(a => {
     a.days.forEach(d => {
       if (byDay[d] && !wkHidden.has(a.who))
-        byDay[d].push({ who:a.who, what:a.what, kind:a.kind || 'activity', s:wkMin(a.start), e:wkMin(a.end) });
+        byDay[d].push({ who:a.who, what:a.what, kind:a.kind || 'activity',
+                        s:wkMin(a.start), e:wkMin(a.end), until:a.until || '' });
     });
   });
   WK_DAYS.forEach(d => byDay[d].sort((a,b) => a.s - b.s || b.e - a.e));
@@ -1647,7 +1656,8 @@ function renderWeekly() {
   // ── Legend doubles as the person filter ──
   const legend = Object.entries(PEOPLE).map(([k,p]) => {
     const on   = !wkHidden.has(k);
-    const acts = [...new Set(WEEK_ACTIVITIES.filter(a => a.who === k).map(a => a.what))].join(' · ');
+    const acts = [...new Set(WEEK_ACTIVITIES.filter(a => a.who === k)
+      .map(a => a.what + (a.until ? ' to ' + wkUntil(a.until) : '')))].join(' · ');
     return `<button class="wk-toggle ${on ? '' : 'is-off'}" onclick="wkToggle('${k}')"
         aria-pressed="${on}" title="${on ? 'Hide' : 'Show'} ${p.name}">
       <span class="wk-swatch" style="${on ? `background:${p.color}` : `box-shadow:inset 0 0 0 2px ${p.color}`}"></span>
@@ -1783,7 +1793,7 @@ function renderWeekly() {
         <td><div class="wk-who-cell"><span class="wk-swatch" style="background:${p.color}"></span>${p.name}</div></td>
         <td>${v.what}</td>
         <td class="wk-td-time">${wkTA(v.s)} – ${wkTA(v.e)}</td>
-        <td class="wk-td-time">${wkDur(v.e - v.s)}</td>
+        <td class="wk-td-time">${wkDur(v.e - v.s)}${v.until ? ' · ends ' + wkUntil(v.until) : ''}</td>
       </tr>`;
     });
   });

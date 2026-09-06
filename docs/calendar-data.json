@@ -9,21 +9,12 @@
     "notes": ""
   },
   {
-    "id": "ev-1779385775040-fblnn",
-    "title": "Kainoa Wedding",
-    "type": "commitment",
+    "id": "ev-1780504800102-9dtk8",
+    "title": "Justin and Rachel",
+    "type": "family",
     "status": "booked",
-    "start": "2026-08-14",
-    "end": "2026-08-16",
-    "notes": ""
-  },
-  {
-    "id": "ev-1779385805620-npits",
-    "title": "Kalia Volleyball",
-    "type": "commitment",
-    "status": "booked",
-    "start": "2026-07-13",
-    "end": "2026-07-16",
+    "start": "2026-05-29",
+    "end": "2026-05-31",
     "notes": ""
   },
   {
@@ -54,6 +45,15 @@
     "notes": ""
   },
   {
+    "id": "ev-1780297399652-e2ev0",
+    "title": "Royce Visit",
+    "type": "family",
+    "status": "booked",
+    "start": "2026-06-19",
+    "end": "2026-06-21",
+    "notes": ""
+  },
+  {
     "id": "ev-1779391190906-rcm6s",
     "title": "Hoopfest Weekend",
     "type": "other",
@@ -72,48 +72,12 @@
     "notes": ""
   },
   {
-    "id": "ev-1779391223293-my4fy",
-    "title": "CR Birthday",
-    "type": "family",
-    "status": "tentative",
-    "start": "2026-08-02",
-    "end": "2026-08-02",
-    "notes": ""
-  },
-  {
-    "id": "ev-1779391242345-mfz1y",
-    "title": "School",
+    "id": "ev-1779385805620-npits",
+    "title": "Kalia Volleyball",
     "type": "commitment",
     "status": "booked",
-    "start": "2026-08-24",
-    "end": "2026-08-24",
-    "notes": ""
-  },
-  {
-    "id": "ev-1779392217161-zp3ds",
-    "title": "Christy Coast",
-    "type": "travel",
-    "status": "booked",
-    "start": "2026-08-16",
-    "end": "2026-08-23",
-    "notes": ""
-  },
-  {
-    "id": "ev-1780297399652-e2ev0",
-    "title": "Royce Visit",
-    "type": "family",
-    "status": "booked",
-    "start": "2026-06-19",
-    "end": "2026-06-21",
-    "notes": ""
-  },
-  {
-    "id": "ev-1780504800102-9dtk8",
-    "title": "Justin and Rachel",
-    "type": "family",
-    "status": "booked",
-    "start": "2026-05-29",
-    "end": "2026-05-31",
+    "start": "2026-07-13",
+    "end": "2026-07-16",
     "notes": ""
   },
   {
@@ -126,6 +90,24 @@
     "notes": ""
   },
   {
+    "id": "ev-1781585062074-m003n",
+    "title": "Mom To Yakima",
+    "type": "travel",
+    "status": "booked",
+    "start": "2026-07-18",
+    "end": "2026-07-25",
+    "notes": ""
+  },
+  {
+    "id": "ev-1779391223293-my4fy",
+    "title": "CR Birthday",
+    "type": "family",
+    "status": "tentative",
+    "start": "2026-08-02",
+    "end": "2026-08-02",
+    "notes": ""
+  },
+  {
     "id": "ev-1780988456605-wu1og",
     "title": "Christy b-day",
     "type": "travel",
@@ -135,12 +117,162 @@
     "notes": ""
   },
   {
-    "id": "ev-1781585062074-m003n",
-    "title": "Mom To Yakima",
+    "id": "ev-1779385775040-fblnn",
+    "title": "Kainoa Wedding",
+    "type": "commitment",
+    "status": "booked",
+    "start": "2026-08-14",
+    "end": "2026-08-16",
+    "notes": ""
+  },
+  {
+    "id": "ev-1779392217161-zp3ds",
+    "title": "Christy Coast",
     "type": "travel",
     "status": "booked",
-    "start": "2026-07-18",
-    "end": "2026-07-25",
+    "start": "2026-08-16",
+    "end": "2026-08-23",
     "notes": ""
+  },
+  {
+    "id": "ev-1779391242345-mfz1y",
+    "title": "School",
+    "type": "commitment",
+    "status": "booked",
+    "start": "2026-08-24",
+    "end": "2026-08-24",
+    "notes": ""
+  },
+  {
+    "id": "ev-soc-20260912-0900-kj",
+    "title": "KJ Soccer vs VLN",
+    "type": "game",
+    "status": "booked",
+    "start": "2026-09-12",
+    "end": "2026-09-12",
+    "time": "09:00",
+    "who": "KJ",
+    "notes": "HOME vs VLN [Hansen] Jet Black \u00b7 Andrew Rypien Fields (ARF) \u2013 06"
+  },
+  {
+    "id": "ev-soc-20260912-1030-ml",
+    "title": "ML Soccer at MEF",
+    "type": "game",
+    "status": "booked",
+    "start": "2026-09-12",
+    "end": "2026-09-12",
+    "time": "10:30",
+    "who": "ML",
+    "notes": "AWAY at MEF [Friedly/Nolte] \u00b7 Andrew Rypien Fields (ARF) \u2013 12 \u00b7 opponent colour truncated in source"
+  },
+  {
+    "id": "ev-soc-20260919-1010-kj",
+    "title": "KJ Soccer vs DPM",
+    "type": "game",
+    "status": "booked",
+    "start": "2026-09-19",
+    "end": "2026-09-19",
+    "time": "10:10",
+    "who": "KJ",
+    "notes": "HOME vs DPM [Curry] Charcoal \u00b7 Evergreen Elementary \u2013 2B"
+  },
+  {
+    "id": "ev-soc-20260919-1300-ml",
+    "title": "ML Soccer vs RVR",
+    "type": "game",
+    "status": "booked",
+    "start": "2026-09-19",
+    "end": "2026-09-19",
+    "time": "13:00",
+    "who": "ML",
+    "notes": "HOME vs RVR [Ostby] Neon Blue \u00b7 Andrew Rypien Fields (ARF) \u2013 11"
+  },
+  {
+    "id": "ev-soc-20260926-0915-ml",
+    "title": "ML Soccer vs MEC",
+    "type": "game",
+    "status": "booked",
+    "start": "2026-09-26",
+    "end": "2026-09-26",
+    "time": "09:15",
+    "who": "ML",
+    "notes": "HOME vs MEC [Ulrich] Charcoal \u00b7 Andrew Rypien Fields (ARF) \u2013 13"
+  },
+  {
+    "id": "ev-soc-20260926-1230-kj",
+    "title": "KJ Soccer at MTM",
+    "type": "game",
+    "status": "booked",
+    "start": "2026-09-26",
+    "end": "2026-09-26",
+    "time": "12:30",
+    "who": "KJ",
+    "notes": "AWAY at MTM [Folsom] Royal \u00b7 Evergreen Elementary \u2013 2B"
+  },
+  {
+    "id": "ev-soc-20261003-1010-kj",
+    "title": "KJ Soccer vs NWW",
+    "type": "game",
+    "status": "booked",
+    "start": "2026-10-03",
+    "end": "2026-10-03",
+    "time": "10:10",
+    "who": "KJ",
+    "notes": "HOME vs NWW [Taylor] \u00b7 Dwight Merkel Complex (DMC) \u2013 3B \u00b7 opponent colour truncated in source"
+  },
+  {
+    "id": "ev-soc-20261003-1245-ml",
+    "title": "ML Soccer at 9MC",
+    "type": "game",
+    "status": "booked",
+    "start": "2026-10-03",
+    "end": "2026-10-03",
+    "time": "12:45",
+    "who": "ML",
+    "notes": "AWAY at 9MC [Yancey] Jet Black \u00b7 Franklin Park \u2013 FP B"
+  },
+  {
+    "id": "ev-soc-20261010-1000-ml",
+    "title": "ML Soccer at DPK",
+    "type": "game",
+    "status": "booked",
+    "start": "2026-10-10",
+    "end": "2026-10-10",
+    "time": "10:00",
+    "who": "ML",
+    "notes": "AWAY at DPK [Mottern] Maroon (16) \u00b7 Bidwell Park \u2013 1"
+  },
+  {
+    "id": "ev-soc-20261010-1340-kj",
+    "title": "KJ Soccer at 9MF",
+    "type": "game",
+    "status": "booked",
+    "start": "2026-10-10",
+    "end": "2026-10-10",
+    "time": "13:40",
+    "who": "KJ",
+    "notes": "AWAY at 9MF [Schumaker] Red \u00b7 Dwight Merkel Complex (DMC) \u2013 3A"
+  },
+  {
+    "id": "ev-soc-20261017-1110-kj",
+    "title": "KJ Soccer at DPP",
+    "type": "game",
+    "status": "booked",
+    "start": "2026-10-17",
+    "end": "2026-10-17",
+    "time": "11:10",
+    "who": "KJ",
+    "notes": "AWAY at DPP [Bean] Silver \u00b7 Arcadia Elementary \u2013 2"
+  },
+  {
+    "id": "ev-soc-20261017-1300-ml",
+    "title": "ML Soccer vs DPK",
+    "type": "game",
+    "status": "booked",
+    "start": "2026-10-17",
+    "end": "2026-10-17",
+    "time": "13:00",
+    "who": "ML",
+    "notes": "HOME vs DPK [Mottern] Maroon (16) \u00b7 Deer Park Elementary \u2013 Soccer JV (South field)"
   }
 ]
