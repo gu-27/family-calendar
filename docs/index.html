@@ -989,7 +989,7 @@ const TYPES = {
 
 // ── GitHub Sync ──────────────────────────────────────────
 const GH = {
-  owner: 'gu-27', repo: 'family-summer-2026-calendar',
+  owner: 'gu-27', repo: 'family-calendar',
   branch: 'main', path: 'docs/calendar-data.json',
 };
 let ghSHA = '';
@@ -1020,7 +1020,7 @@ async function promptForToken() {
     'Paste a GitHub token so this device can save changes.\n\n' +
     'Make one at github.com/settings/personal-access-tokens\n' +
     '  · Fine-grained token\n' +
-    '  · Repository access: only family-summer-2026-calendar\n' +
+    '  · Repository access: only family-calendar\n' +
     '  · Repository permissions -> Contents: Read and write\n\n' +
     'It is saved only in this browser, never in the site.'
   ) || '').trim();
@@ -1045,17 +1045,14 @@ function decB64(b64) {
 }
 
 async function ghLoad() {
-  // Public repo: reading needs no token, so the calendar still shows up for
-  // family members who have never set one.
-  const token = getToken();
-  const url = `https://api.github.com/repos/${GH.owner}/${GH.repo}/contents/${GH.path}`;
-  const headers = { 'Cache-Control': 'no-cache' };
-  if (token) headers.Authorization = `token ${token}`;
-  const res = await fetch(url, { headers });
+  // Read the copy GitHub Pages already serves next to this page. Same origin,
+  // no token, no CORS, and no rate limit — the GitHub API allows only 60
+  // unauthenticated calls per hour per IP, which is what made the calendar go
+  // blank for the family after a handful of page loads. The API is now used
+  // only for writing, where a token supplies its own much larger quota.
+  const res = await fetch(`calendar-data.json?cb=${Date.now()}`, { cache: 'no-store' });
   if (!res.ok) return null;
-  const data = await res.json();
-  ghSHA = data.sha;
-  return JSON.parse(decB64(data.content.replace(/\n/g, '')));
+  return await res.json();
 }
 
 async function syncToGitHub() {
@@ -1984,11 +1981,19 @@ document.addEventListener('keydown',e=>{ if (e.key==='Escape') closeModal(); });
 // ── Init ──────────────────────────────────────────────────
 setView('scroll'); // render immediately from localStorage
 
+// The term starts in August, so a fresh load lands on weeks that are already
+// past and empty — which reads as "the calendar is blank". Open on today.
+function scrollToToday() {
+  const el = document.querySelector('.cont-day.is-today, .cal-day.is-today, .mini-day.is-today');
+  if (!el) return;
+  el.scrollIntoView({ block: 'center', behavior: 'auto' });
+}
+
 (async () => {
-  // Update from GitHub in the background
+  // Published data first; falls back to whatever is already in localStorage.
   const ghData = await ghLoad().catch(() => null);
   if (ghData && Array.isArray(ghData)) {
-    // Prefer GitHub data if it has events, or if local is empty
+    // Prefer published data if it has events, or if local is empty
     if (ghData.length > 0 || events.length === 0) {
       events = ghData;
       localStorage.setItem(STORAGE_KEY, JSON.stringify(events));
@@ -1998,7 +2003,8 @@ setView('scroll'); // render immediately from localStorage
   } else {
     setSyncDot(false);
   }
-  initDone = true; // unlock auto-sync now that we've loaded from GitHub
+  initDone = true; // unlock auto-sync now that the published data has loaded
+  scrollToToday();
 })();
 </script>
 </body>
