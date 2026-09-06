@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Correia Family · Summer 2026</title>
+  <title>Correia Family · 2026–27</title>
   <style>
     :root {
       --navy: #0F172A;
@@ -576,7 +576,7 @@
 
     .form-textarea { resize: vertical; min-height: 65px; }
 
-    .type-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: .35rem; }
+    .type-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: .35rem; }
 
     .type-chip {
       padding: .42rem .25rem;
@@ -853,10 +853,10 @@
 <!-- ── Header ── -->
 <header>
   <div class="header-brand">
-    <div class="header-icon">☀️</div>
+    <div class="header-icon">📚</div>
     <div>
       <div class="header-title">Correia Family</div>
-      <div class="header-sub">Summer 2026</div>
+      <div class="header-sub">2026–27 School Year</div>
     </div>
   </div>
   <div class="view-toggle">
@@ -911,11 +911,21 @@
     <div class="form-group form-row">
       <div>
         <label class="form-label">Start</label>
-        <input type="date" class="form-input" id="evStart" min="2026-05-01" max="2026-09-30" onchange="onStartChange()">
+        <input type="date" class="form-input" id="evStart" min="2026-08-01" max="2027-06-30" onchange="onStartChange()">
       </div>
       <div>
         <label class="form-label">End</label>
-        <input type="date" class="form-input" id="evEnd" min="2026-05-01" max="2026-09-30">
+        <input type="date" class="form-input" id="evEnd" min="2026-08-01" max="2027-06-30">
+      </div>
+    </div>
+    <div class="form-group form-row">
+      <div>
+        <label class="form-label">Time <span style="font-weight:400;text-transform:none;letter-spacing:0;">(optional)</span></label>
+        <input type="time" class="form-input" id="evTime">
+      </div>
+      <div>
+        <label class="form-label">Who <span style="font-weight:400;text-transform:none;letter-spacing:0;">(optional)</span></label>
+        <select class="form-select" id="evWho"></select>
       </div>
     </div>
     <div class="form-group">
@@ -945,13 +955,31 @@
 
 <script>
 // ── Constants ────────────────────────────────────────────
-const YEAR = 2026;
-const SUMMER = [4,5,6,7,8]; // May–Sep
+// The calendar runs the 2026–27 school year, which crosses a year boundary —
+// so months are carried as {y,m} pairs, never a bare month index.
+const TERM = { startY: 2026, startM: 7, endY: 2027, endM: 5 }; // Aug 2026 – Jun 2027
+const TERM_START = '2026-08-01';
+const TERM_END   = '2027-06-30';
+
+const TERM_MONTHS = (() => {
+  const out = [];
+  let y = TERM.startY, m = TERM.startM;
+  while (y < TERM.endY || (y === TERM.endY && m <= TERM.endM)) {
+    out.push({ y, m });
+    if (++m > 11) { m = 0; y++; }
+  }
+  return out;
+})();
+
+function inTerm(str) { return str >= TERM_START && str <= TERM_END; }
+
 const MONTH_NAMES  = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 const DOW_LABELS   = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 const STORAGE_KEY  = 'family-cal-2026';
 
 const TYPES = {
+  game:       { label:'Game',         emoji:'🏆',  color:'#DC2626', bg:'#FEF2F2', text:'#991B1B' },
+  practice:   { label:'Practice',     emoji:'🏃',  color:'#0EA5E9', bg:'#F0F9FF', text:'#075985' },
   travel:     { label:'Travel',       emoji:'✈️',  color:'#F97316', bg:'#FFF7ED', text:'#9A3412' },
   commitment: { label:'Commitment',   emoji:'📌',  color:'#6366F1', bg:'#EEF2FF', text:'#3730A3' },
   family:     { label:'Family',       emoji:'👨‍👩‍👧‍👦', color:'#EC4899', bg:'#FDF2F8', text:'#9D174D' },
@@ -1131,9 +1159,21 @@ function dayCount(s,e) { return Math.round((parseDs(e)-parseDs(s))/86400000)+1; 
 function eventsOnDay(str) { return events.filter(e=>e.start<=str&&e.end>=str); }
 function uid() { return 'ev-'+Date.now()+'-'+Math.random().toString(36).slice(2,7); }
 
+// "17:30" -> "5:30" — shown as a prefix on pills so a game reads as a time first
+function evTime(ev) {
+  if (!ev || !ev.time) return '';
+  const [h, mi] = ev.time.split(':').map(Number);
+  return `${((h + 11) % 12) + 1}:${String(mi).padStart(2, '0')} `;
+}
+function evWho(ev) {
+  return ev && ev.who && typeof PEOPLE !== 'undefined' && PEOPLE[ev.who] ? PEOPLE[ev.who].name : '';
+}
+
 // ── Legend HTML ──────────────────────────────────────────
 const LEGEND_HTML = `
   <div class="cal-legend">
+    <div class="legend-item"><div class="legend-chip" style="background:#FECACA"></div>Game</div>
+    <div class="legend-item"><div class="legend-chip" style="background:#BAE6FD"></div>Practice</div>
     <div class="legend-item"><div class="legend-chip" style="background:#FED7AA"></div>Travel</div>
     <div class="legend-item"><div class="legend-chip" style="background:#C7D2FE"></div>Commitment</div>
     <div class="legend-item"><div class="legend-chip" style="background:#FBCFE8"></div>Family</div>
@@ -1145,8 +1185,8 @@ const LEGEND_HTML = `
   </div>`;
 
 // ── Build a full-size month grid ──────────────────────────
-function buildFullMonth(m) {
-  const y=YEAR, today=todayStr();
+function buildFullMonth(y, m) {
+  const today=todayStr();
   const total=daysInMonth(y,m), first=startDow(y,m);
   const prevTotal=daysInMonth(y,m-1);
 
@@ -1174,7 +1214,7 @@ function buildFullMonth(m) {
       const sl=ev.start===str, el=ev.end===str;
       const cc=!sl&&!el?'cont-lr':!sl?'cont-l':!el?'cont-r':'';
       pills+=`<span class="event-pill ${cc}" style="background:${t.bg};color:${t.text};border-left:2px solid ${t.color};"
-        onclick="openModal('${ev.id}');event.stopPropagation();">${sl?ev.title:''}</span>`;
+        onclick="openModal('${ev.id}');event.stopPropagation();">${sl?evTime(ev)+ev.title:''}</span>`;
     });
     if (evs.length>2) pills+=`<span class="more-count">+${evs.length-2}</span>`;
     cells+=`<div class="${cls}" onclick="openModal(null,'${str}')"><div class="day-num">${d}</div>${pills}</div>`;
@@ -1193,14 +1233,14 @@ function buildFullMonth(m) {
 }
 
 // ── Build a mini month (overview) ────────────────────────
-function buildMiniMonth(m) {
-  const y=YEAR, today=todayStr();
+function buildMiniMonth(y, m) {
+  const today=todayStr();
   const total=daysInMonth(y,m), first=startDow(y,m);
   const prevTotal=daysInMonth(y,m-1);
-  const evCount=events.filter(e=>{
-    const em=parseInt(e.start.split('-')[1])-1, ee=parseInt(e.end.split('-')[1])-1;
-    return em<=m&&ee>=m;
-  }).length;
+  // Compare on full dates, not bare month numbers — the term spans two years,
+  // so month index alone would count August 2026 events into a 2027 August.
+  const mStart = ds(y, m, 1), mEnd = ds(y, m, daysInMonth(y, m));
+  const evCount = events.filter(e => e.start <= mEnd && e.end >= mStart).length;
 
   const dowHdr=DOW_LABELS.map((d,i)=>
     `<div class="mini-dow ${i===0||i===6?'is-wknd':''}">${d[0]}</div>`).join('');
@@ -1235,7 +1275,7 @@ function buildMiniMonth(m) {
   return `
     <div class="mini-month">
       <div class="mini-month-hdr">
-        ${MONTH_NAMES[m]}
+        ${MONTH_NAMES[m]} <span style="font-weight:600;color:var(--muted);font-size:.72rem;">${y}</span>
         ${evCount>0?`<span class="mini-month-count">${evCount} event${evCount>1?'s':''}</span>`:''}
       </div>
       <div class="mini-dow-row">${dowHdr}</div>
@@ -1248,9 +1288,9 @@ function renderScroll() {
   const today = todayStr();
 
   // Build continuous weeks: first Sunday on/before May 1 → last Saturday on/after Sep 30
-  const firstDay = new Date(YEAR, 4, 1);
+  const firstDay = parseDs(TERM_START);
   firstDay.setDate(firstDay.getDate() - firstDay.getDay());
-  const lastDay = new Date(YEAR, 8, 30);
+  const lastDay = parseDs(TERM_END);
   lastDay.setDate(lastDay.getDate() + (6 - lastDay.getDay()));
 
   const weeks = [];
@@ -1260,39 +1300,47 @@ function renderScroll() {
     weeks.push(week);
   }
 
-  // Determine which grid row each month label starts on (header = row 1, weeks start at row 2)
+  // Which grid row each month label starts on (header = row 1, weeks start at row 2).
+  // Months are keyed "y-m" because the term spans two calendar years.
   const monthLabeled = new Set();
-  const monthStartRow = {}; // month index → grid row number
+  const monthStartRow = {};
+  const monthOrder = [];
 
   weeks.forEach((week, wi) => {
     const gridRow = wi + 2;
     let label = null;
 
-    // First summer week triggers May label
-    if (!monthLabeled.has(4) && week.some(d => d.getMonth() === 4)) label = 4;
+    // The first in-term week labels whatever month it belongs to.
+    if (!monthLabeled.size) {
+      const d0 = week.find(d => inTerm(ds(d.getFullYear(), d.getMonth(), d.getDate())));
+      if (d0) label = d0.getFullYear() + '-' + d0.getMonth();
+    }
 
-    // New month starts when the 1st falls in this week
-    for (const day of week) {
-      if (day.getDate() === 1 && SUMMER.includes(day.getMonth()) && !monthLabeled.has(day.getMonth())) {
-        label = day.getMonth();
-        break;
+    // Any later month starts when its 1st falls inside this week.
+    if (label === null) {
+      for (const day of week) {
+        const key = day.getFullYear() + '-' + day.getMonth();
+        if (day.getDate() === 1 && inTerm(ds(day.getFullYear(), day.getMonth(), 1)) && !monthLabeled.has(key)) {
+          label = key;
+          break;
+        }
       }
     }
 
     if (label !== null && !monthLabeled.has(label)) {
       monthLabeled.add(label);
       monthStartRow[label] = gridRow;
+      monthOrder.push(label);
     }
   });
 
-  // Calculate row spans: each month spans until the next month's start row (or end)
+  // Each month spans until the next month's start row (or the end of the grid)
   const totalRows = weeks.length + 1;
-  const sortedMonths = Object.keys(monthStartRow).map(Number).sort((a, b) => a - b);
   const monthSpans = {};
-  sortedMonths.forEach((m, i) => {
-    const start = monthStartRow[m];
-    const end = i + 1 < sortedMonths.length ? monthStartRow[sortedMonths[i + 1]] : totalRows + 1;
-    monthSpans[m] = { start, span: end - start };
+  monthOrder.forEach((key, i) => {
+    const start = monthStartRow[key];
+    const end = i + 1 < monthOrder.length ? monthStartRow[monthOrder[i + 1]] : totalRows + 1;
+    monthSpans[key] = { start, span: end - start };
   });
 
   // ── Build flat grid HTML ─────────────────────────────
@@ -1304,11 +1352,14 @@ function renderScroll() {
     html += `<div class="cont-dow ${i===0||i===6?'is-weekend':''}" style="grid-column:${i+2};grid-row:1;">${d}</div>`;
   });
 
-  // Month label cells (spanning multiple rows)
-  sortedMonths.forEach(m => {
-    const { start, span } = monthSpans[m];
+  // Month label cells (spanning multiple rows). The year is shown on January so
+  // the boundary between the two calendar years is readable in one column.
+  monthOrder.forEach(key => {
+    const { start, span } = monthSpans[key];
+    const [ly, lm] = key.split('-').map(Number);
+    const name = MONTH_NAMES[lm] + (lm === 0 ? ' ' + ly : '');
     html += `<div class="cont-label" style="grid-column:1;grid-row:${start}/span ${span};">
-      <span class="cont-label-text">${MONTH_NAMES[m]}</span>
+      <span class="cont-label-text">${name}</span>
     </div>`;
   });
 
@@ -1318,7 +1369,7 @@ function renderScroll() {
     week.forEach((day, di) => {
       const gridCol = di + 2; // columns 2–8
       const str = ds(day.getFullYear(), day.getMonth(), day.getDate());
-      const inRange = SUMMER.includes(day.getMonth());
+      const inRange = inTerm(str);
 
       if (!inRange) {
         html += `<div class="cont-day out-range" style="grid-column:${gridCol};grid-row:${gridRow};">
@@ -1329,7 +1380,7 @@ function renderScroll() {
 
       const evs = eventsOnDay(str);
       const isToday = str === today;
-      const isPast  = str < today || str >= `${YEAR}-08-24`;
+      const isPast  = str < today;
       const showMark = day.getDate() === 1;
       const dayColor = evs.length===0 ? '' : evs.some(e=>!e.status||e.status==='booked') ? 'has-events' : 'tentative';
       const cls = ['cont-day', isToday ? 'is-today' : '', dayColor, isPast && evs.length===0 ? 'is-past' : ''].filter(Boolean).join(' ');
@@ -1341,7 +1392,7 @@ function renderScroll() {
         const cc = !sl && !el ? 'cont-lr' : !sl ? 'cont-l' : !el ? 'cont-r' : '';
         const showTitle = true;
         pills += `<span class="event-pill ${cc}" style="background:${t.bg};color:${t.text};border-left:2px solid ${t.color};"
-          onclick="openModal('${ev.id}');event.stopPropagation();">${showTitle ? ev.title : ''}</span>`;
+          onclick="openModal('${ev.id}');event.stopPropagation();">${showTitle ? (sl ? evTime(ev) : '') + ev.title : ''}</span>`;
       });
       if (evs.length > 2) pills += `<span class="more-count">+${evs.length - 2}</span>`;
 
@@ -1358,7 +1409,7 @@ function renderScroll() {
 }
 
 function renderOverview() {
-  const grid = SUMMER.map(m => buildMiniMonth(m)).join('');
+  const grid = TERM_MONTHS.map(t => buildMiniMonth(t.y, t.m)).join('');
   document.getElementById('overviewView').innerHTML = `
     <div class="overview-grid">${grid}</div>
     ${LEGEND_HTML.replace('cal-legend','cal-legend').replace('style="','style="margin-top:.5rem;border-radius:12px;')}`;
@@ -1377,7 +1428,7 @@ function renderSummary() {
       <div class="sum-dot" style="background:${t.color}"></div>
       <div>
         <div class="sum-row-title">${ev.title}</div>
-        <div class="sum-row-meta">${fmtRange(ev.start,ev.end)} · ${t.label}${days>1?' · '+days+' days':''}${ev.notes?' · '+ev.notes:''}</div>
+        <div class="sum-row-meta">${fmtRange(ev.start,ev.end)}${ev.time?' · '+evTime(ev).trim():''} · ${t.label}${evWho(ev)?' · '+evWho(ev):''}${days>1?' · '+days+' days':''}${ev.notes?' · '+ev.notes:''}</div>
       </div></div>`;
   });
   html+=`</div>`;
@@ -1402,7 +1453,7 @@ function renderSummary() {
 }
 
 function calcStretches() {
-  const start=new Date(YEAR,4,10), end=new Date(YEAR,8,30);
+  const start=parseDs(TERM_START), end=parseDs(TERM_END);
   const out=[]; let ss=null, len=0;
   for (let d=new Date(start);d<=end;d.setDate(d.getDate()+1)) {
     const s=ds(d.getFullYear(),d.getMonth(),d.getDate());
@@ -1418,7 +1469,7 @@ function calcStretches() {
 
 function calcFreeWeekends() {
   const out=[];
-  for (let d=new Date(YEAR,4,1);d<=new Date(YEAR,8,30);d.setDate(d.getDate()+1)) {
+  for (let d=parseDs(TERM_START);d<=parseDs(TERM_END);d.setDate(d.getDate()+1)) {
     if (d.getDay()===6) {
       const sat=ds(d.getFullYear(),d.getMonth(),d.getDate());
       const s2=new Date(d); s2.setDate(s2.getDate()+1);
@@ -1800,6 +1851,13 @@ function setView(v) {
 }
 
 // ── Type selector ─────────────────────────────────────────
+function buildWhoSelect(sel) {
+  const el = document.getElementById('evWho');
+  el.innerHTML = '<option value="">— anyone / family —</option>' +
+    Object.entries(PEOPLE).map(([k, p]) =>
+      `<option value="${k}"${sel === k ? ' selected' : ''}>${p.name}</option>`).join('');
+}
+
 function buildTypeGrid(sel) {
   selectedType=sel||'travel';
   document.getElementById('typeGrid').innerHTML=Object.entries(TYPES).map(([k,t])=>`
@@ -1854,14 +1912,18 @@ function openModal(id=null,date=null) {
     document.getElementById('evStart').value=ev.start;
     document.getElementById('evEnd').value=ev.end;
     document.getElementById('evNotes').value=ev.notes||'';
-    buildTypeGrid(ev.type); selectStatus(ev.status||'booked'); btnDel.style.display='block';
+    document.getElementById('evTime').value=ev.time||'';
+    buildTypeGrid(ev.type); buildWhoSelect(ev.who||''); selectStatus(ev.status||'booked');
+    btnDel.style.display='block';
   } else {
     document.getElementById('modalTitle').textContent='Add Event';
     document.getElementById('evTitle').value='';
     document.getElementById('evStart').value=date||'';
     document.getElementById('evEnd').value=date||'';
     document.getElementById('evNotes').value='';
-    buildTypeGrid('travel'); selectStatus('booked'); btnDel.style.display='none';
+    document.getElementById('evTime').value='';
+    buildTypeGrid('game'); buildWhoSelect(''); selectStatus('booked');
+    btnDel.style.display='none';
   }
   document.getElementById('overlay').classList.remove('hidden');
   setTimeout(()=>document.getElementById('evTitle').focus(),60);
@@ -1884,11 +1946,13 @@ function saveEvent() {
   const start=document.getElementById('evStart').value;
   const end=document.getElementById('evEnd').value;
   const notes=document.getElementById('evNotes').value.trim();
+  const time=document.getElementById('evTime').value;
+  const who=document.getElementById('evWho').value;
   if (!title)      { alert('Please enter a title.'); return; }
   if (!start||!end){ alert('Please select dates.'); return; }
   if (start>end)   { alert('End must be on or after start.'); return; }
-  if (editingId) events=events.map(e=>e.id===editingId?{...e,title,type:selectedType,status:selectedStatus,start,end,notes}:e);
-  else events.push({id:uid(),title,type:selectedType,status:selectedStatus,start,end,notes});
+  if (editingId) events=events.map(e=>e.id===editingId?{...e,title,type:selectedType,status:selectedStatus,start,end,time,who,notes}:e);
+  else events.push({id:uid(),title,type:selectedType,status:selectedStatus,start,end,time,who,notes});
   persist(); closeModal(); refresh();
 }
 
