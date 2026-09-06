@@ -876,6 +876,14 @@
   <label>🔍 Zoom</label>
   <input type="range" class="zoom-slider" id="zoomSlider" min="28" max="120" value="51" oninput="applyZoom(this.value)">
   <span class="zoom-hint" id="zoomHint">Normal</span>
+  <span style="flex:1"></span>
+  <label for="monthJump" style="font-size:.72rem;font-weight:700;color:var(--muted);">Jump to</label>
+  <select id="monthJump" onchange="jumpToMonth(this.value)"
+    style="font-family:inherit;font-size:.76rem;padding:.28rem .5rem;border:1px solid var(--border);
+           border-radius:8px;color:var(--navy);background:white;cursor:pointer;"></select>
+  <button onclick="jumpToToday()"
+    style="font-family:inherit;font-size:.76rem;font-weight:700;padding:.3rem .8rem;border:1px solid var(--border);
+           border-radius:8px;background:white;color:var(--navy);cursor:pointer;">Today</button>
 </div>
 
 <!-- ── Scroll View (all months stacked) ── -->
@@ -955,21 +963,33 @@
 
 <script>
 // ── Constants ────────────────────────────────────────────
-// The calendar runs the 2026–27 school year, which crosses a year boundary —
-// so months are carried as {y,m} pairs, never a bare month index.
-const TERM = { startY: 2026, startM: 7, endY: 2027, endM: 5 }; // Aug 2026 – Jun 2027
-const TERM_START = '2026-08-01';
-const TERM_END   = '2027-06-30';
+// The visible range is computed, not hardcoded, so the calendar always scrolls
+// back over past months and forward into upcoming ones without anyone editing
+// a date. It spans at least 6 months back and 12 forward from today, widened
+// further if any event falls outside that. Months are carried as {y,m} pairs
+// because the range crosses calendar years.
+const BACK_MONTHS = 6, FWD_MONTHS = 12;
+let TERM_START = '', TERM_END = '', TERM_MONTHS = [];
 
-const TERM_MONTHS = (() => {
-  const out = [];
-  let y = TERM.startY, m = TERM.startM;
-  while (y < TERM.endY || (y === TERM.endY && m <= TERM.endM)) {
-    out.push({ y, m });
+function recomputeTerm() {
+  const t = parseDs(todayStr());
+  let lo = new Date(t.getFullYear(), t.getMonth() - BACK_MONTHS, 1);
+  let hi = new Date(t.getFullYear(), t.getMonth() + FWD_MONTHS, 1);
+  (typeof events !== 'undefined' ? events : []).forEach(e => {
+    const a = parseDs(e.start), b = parseDs(e.end);
+    if (a < lo) lo = new Date(a.getFullYear(), a.getMonth(), 1);
+    if (b > hi) hi = new Date(b.getFullYear(), b.getMonth(), 1);
+  });
+  const hiEnd = new Date(hi.getFullYear(), hi.getMonth() + 1, 0); // last day of hi
+  TERM_START = ds(lo.getFullYear(), lo.getMonth(), 1);
+  TERM_END   = ds(hiEnd.getFullYear(), hiEnd.getMonth(), hiEnd.getDate());
+  TERM_MONTHS = [];
+  let y = lo.getFullYear(), m = lo.getMonth();
+  while (y < hiEnd.getFullYear() || (y === hiEnd.getFullYear() && m <= hiEnd.getMonth())) {
+    TERM_MONTHS.push({ y, m });
     if (++m > 11) { m = 0; y++; }
   }
-  return out;
-})();
+}
 
 function inTerm(str) { return str >= TERM_START && str <= TERM_END; }
 
@@ -1369,7 +1389,7 @@ function renderScroll() {
       const inRange = inTerm(str);
 
       if (!inRange) {
-        html += `<div class="cont-day out-range" style="grid-column:${gridCol};grid-row:${gridRow};">
+        html += `<div class="cont-day out-range" data-date="${str}" style="grid-column:${gridCol};grid-row:${gridRow};">
           <div class="cont-num">${day.getDate()}</div>
         </div>`;
         return;
@@ -1393,7 +1413,7 @@ function renderScroll() {
       });
       if (evs.length > 2) pills += `<span class="more-count">+${evs.length - 2}</span>`;
 
-      html += `<div class="${cls}" style="grid-column:${gridCol};grid-row:${gridRow};" onclick="openModal(null,'${str}')">
+      html += `<div class="${cls}" data-date="${str}" style="grid-column:${gridCol};grid-row:${gridRow};" onclick="openModal(null,'${str}')">
         ${showMark ? `<div class="cont-month-marker">${MONTH_NAMES[day.getMonth()].slice(0,3)}</div>` : ''}
         <div class="cont-num">${day.getDate()}</div>
         ${pills}
@@ -1403,6 +1423,7 @@ function renderScroll() {
 
   html += '</div>';
   document.getElementById('scrollView').innerHTML = `<div class="cont-wrap">${html}${LEGEND_HTML}</div>`;
+  buildMonthJump();
 }
 
 function renderOverview() {
@@ -1503,6 +1524,9 @@ const PEOPLE = {
 // yet, so they carry none and read as ongoing.
 const WEEK_ACTIVITIES = [
   { who:'K',  what:'Volleyball', days:['Mon','Tue','Wed','Thu'], start:'14:30', end:'17:30', until:'2026-10-28' },
+  // League matches are every Monday and Wednesday at 6:00 through Oct 26. The
+  // 90-minute length is an ASSUMPTION — the GSL sheet lists only start times.
+  { who:'K',  what:'Game',       days:['Mon','Wed'],             start:'18:00', end:'19:30', until:'2026-10-26' },
   { who:'K',  what:'Dance',      days:['Tue','Thu'],             start:'19:00', end:'20:45' },
   { who:'ML', what:'Volleyball', days:['Mon','Wed'],             start:'15:15', end:'16:45', until:'2026-10-28' },
   { who:'ML', what:'Dance',      days:['Tue'],                   start:'16:00', end:'17:20' },
@@ -1841,9 +1865,36 @@ function applyZoom(val) {
   document.getElementById('zoomHint').textContent = hints[Math.min(4, Math.floor((v - 28) / 20))];
 }
 
+// ── Month navigation ──────────────────────────────────────
+// The scroll view is one continuous grid, so "going to a month" means scrolling
+// its first day into view. Cells carry data-date, which makes them findable.
+function buildMonthJump() {
+  const sel = document.getElementById('monthJump');
+  if (!sel) return;
+  const cur = todayStr().slice(0, 7);
+  sel.innerHTML = TERM_MONTHS.map(t => {
+    const key = `${t.y}-${String(t.m + 1).padStart(2, '0')}`;
+    return `<option value="${key}"${key === cur ? ' selected' : ''}>${MONTH_NAMES[t.m].slice(0,3)} ${t.y}</option>`;
+  }).join('');
+}
+
+function jumpToMonth(key) {
+  if (!key) return;
+  const el = document.querySelector(`[data-date^="${key}"]`);
+  if (el) el.scrollIntoView({ block: 'start', behavior: 'smooth' });
+}
+
+function jumpToToday() {
+  const el = document.querySelector('[data-date="' + todayStr() + '"]');
+  if (el) el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  const sel = document.getElementById('monthJump');
+  if (sel) sel.value = todayStr().slice(0, 7);
+}
+
 // ── View switching ────────────────────────────────────────
 function setView(v) {
   view=v;
+  recomputeTerm();
   ['scroll','overview','summary','weekly'].forEach(k=>{
     document.getElementById('btn'+k.charAt(0).toUpperCase()+k.slice(1)).classList.toggle('active',k===v);
     document.getElementById(k+'View').style.display=k===v?'block':'none';
@@ -1932,6 +1983,10 @@ function openModal(id=null,date=null) {
     buildTypeGrid('game'); buildWhoSelect(''); selectStatus('booked');
     btnDel.style.display='none';
   }
+  ['evStart','evEnd'].forEach(id => {
+    const el = document.getElementById(id);
+    el.min = TERM_START; el.max = TERM_END;
+  });
   document.getElementById('overlay').classList.remove('hidden');
   setTimeout(()=>document.getElementById('evTitle').focus(),60);
 }
@@ -1970,6 +2025,7 @@ function deleteEvent() {
 }
 
 function refresh() {
+  recomputeTerm();
   if (view==='scroll')   { renderScroll(); applyZoom(document.getElementById('zoomSlider').value); }
   if (view==='overview') renderOverview();
   if (view==='summary')  renderSummary();
@@ -1984,9 +2040,9 @@ setView('scroll'); // render immediately from localStorage
 // The term starts in August, so a fresh load lands on weeks that are already
 // past and empty — which reads as "the calendar is blank". Open on today.
 function scrollToToday() {
-  const el = document.querySelector('.cont-day.is-today, .cal-day.is-today, .mini-day.is-today');
-  if (!el) return;
-  el.scrollIntoView({ block: 'center', behavior: 'auto' });
+  const el = document.querySelector('[data-date="' + todayStr() + '"]')
+          || document.querySelector('.cont-day.is-today');
+  if (el) el.scrollIntoView({ block: 'center', behavior: 'auto' });
 }
 
 (async () => {
