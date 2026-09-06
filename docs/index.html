@@ -964,11 +964,48 @@ const GH = {
   owner: 'gu-27', repo: 'family-summer-2026-calendar',
   branch: 'main', path: 'docs/calendar-data.json',
 };
-const _t1 = 'github_pat_11AN7G4MA0';
-const _t2 = 'FEtPw7H0rvtG_o1vSl6rUuWTOkWVe43AycVHOjxeVUMPpMegwnM34nSpQ5L42FRUJYaFkWPR';
 let ghSHA = '';
 
-function getToken() { return localStorage.getItem('cal_token') || (_t1 + _t2); }
+// No token is stored in this file. This repo is PUBLIC — a token committed here
+// gets found by GitHub's secret scanning and revoked, which is exactly how the
+// previous one died ("Bad credentials"). The token now lives only in the
+// browser's localStorage, per device, and is only needed to SAVE. Reading the
+// calendar works for everyone with no token at all.
+function getToken() { return localStorage.getItem('cal_token') || ''; }
+
+function setToken(t) {
+  if (t) localStorage.setItem('cal_token', t);
+  else localStorage.removeItem('cal_token');
+}
+
+async function tokenWorks(t) {
+  try {
+    const res = await fetch(`https://api.github.com/repos/${GH.owner}/${GH.repo}`,
+      { headers: { Authorization: `token ${t}` } });
+    return res.ok;
+  } catch (e) { return false; }
+}
+
+// Ask for a token in the page itself — no browser console needed.
+async function promptForToken() {
+  const t = (window.prompt(
+    'Paste a GitHub token so this device can save changes.\n\n' +
+    'Make one at github.com/settings/personal-access-tokens\n' +
+    '  · Fine-grained token\n' +
+    '  · Repository access: only family-summer-2026-calendar\n' +
+    '  · Repository permissions -> Contents: Read and write\n\n' +
+    'It is saved only in this browser, never in the site.'
+  ) || '').trim();
+  if (!t) return false;
+  showToast('Checking token…');
+  if (!(await tokenWorks(t))) {
+    showToast('That token did not work — needs Contents: Read and write');
+    return false;
+  }
+  setToken(t);
+  showToast('Token saved on this device ✓');
+  return true;
+}
 
 function encB64(str) {
   const b = new TextEncoder().encode(str); let s = '';
@@ -980,9 +1017,13 @@ function decB64(b64) {
 }
 
 async function ghLoad() {
-  const token = getToken(); if (!token) return null;
+  // Public repo: reading needs no token, so the calendar still shows up for
+  // family members who have never set one.
+  const token = getToken();
   const url = `https://api.github.com/repos/${GH.owner}/${GH.repo}/contents/${GH.path}`;
-  const res = await fetch(url, { headers: { Authorization: `token ${token}`, 'Cache-Control': 'no-cache' } });
+  const headers = { 'Cache-Control': 'no-cache' };
+  if (token) headers.Authorization = `token ${token}`;
+  const res = await fetch(url, { headers });
   if (!res.ok) return null;
   const data = await res.json();
   ghSHA = data.sha;
@@ -990,8 +1031,11 @@ async function ghLoad() {
 }
 
 async function syncToGitHub() {
-  const token = getToken();
-  if (!token) { showToast('No token — add one in browser console: localStorage.setItem(\'cal_token\',\'YOUR_TOKEN\')'); return; }
+  let token = getToken();
+  if (!token) {
+    if (!(await promptForToken())) return;
+    token = getToken();
+  }
   if (!initDone) { showToast('Still loading — try again in a moment'); return; }
   const btn = document.getElementById('sync-btn');
   btn.classList.add('syncing');
@@ -999,6 +1043,15 @@ async function syncToGitHub() {
     // Always fetch GitHub first, then merge — never blindly overwrite
     const url = `https://api.github.com/repos/${GH.owner}/${GH.repo}/contents/${GH.path}`;
     const getRes = await fetch(url, { headers: { Authorization: `token ${token}` } });
+    // An expired or revoked token should say so plainly, and clear itself, so the
+    // next Sync offers the paste box instead of failing the same way forever.
+    if (getRes.status === 401 || getRes.status === 403) {
+      setToken('');
+      btn.classList.remove('syncing');
+      setSyncDot(false);
+      showToast('Token expired — tap Sync again to paste a new one');
+      return;
+    }
     if (getRes.ok) {
       const d = await getRes.json();
       ghSHA = d.sha;
