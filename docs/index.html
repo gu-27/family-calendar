@@ -1523,11 +1523,11 @@ const PEOPLE = {
 // `until` = last date the season runs. Dance and CC's block have no end date
 // yet, so they carry none and read as ongoing.
 const WEEK_ACTIVITIES = [
-  { who:'K',  what:'Volleyball', days:['Mon','Tue','Wed','Thu'], start:'14:30', end:'17:30', until:'2026-10-28' },
+  { who:'K',  what:'Volleyball', days:['Tue','Thu'],             start:'14:30', end:'17:30', until:'2026-10-28' },
   // League matches are every Monday and Wednesday at 6:00 through Oct 26. The
   // 90-minute length is an ASSUMPTION — the GSL sheet lists only start times.
   { who:'K',  what:'Game',       days:['Mon','Wed'],             start:'18:00', end:'19:30', until:'2026-10-26' },
-  { who:'K',  what:'Dance',      days:['Thu'],                   start:'18:00', end:'19:45' },
+  { who:'K',  what:'Dance',      days:['Thu'],                   start:'18:00', end:'19:45', accent:'#C8102E' },
   { who:'ML', what:'Volleyball', days:['Mon','Wed'],             start:'15:15', end:'16:45', until:'2026-10-28' },
   { who:'ML', what:'Dance',      days:['Tue'],                   start:'16:00', end:'17:20' },
   { who:'ML', what:'Soccer',     days:['Tue','Thu'],             start:'17:30', end:'18:30', until:'2026-10-17' },
@@ -1578,7 +1578,8 @@ function wkEvents() {
     a.days.forEach(d => {
       if (byDay[d] && !wkHidden.has(a.who))
         byDay[d].push({ who:a.who, what:a.what, kind:a.kind || 'activity',
-                        s:wkMin(a.start), e:wkMin(a.end), until:a.until || '' });
+                        s:wkMin(a.start), e:wkMin(a.end), until:a.until || '',
+                        accent:a.accent || '' });
     });
   });
   WK_DAYS.forEach(d => byDay[d].sort((a,b) => a.s - b.s || b.e - a.e));
@@ -1746,7 +1747,9 @@ function renderWeekly() {
         cells += `<div class="wk-ev${clash ? ' is-clash' : ''}${busy ? ' is-busy' : ''}" title="${tip}"
           style="top:calc(${top.toFixed(3)}% + 2px);height:calc(${hgt.toFixed(3)}% - 4px);
                  left:calc(${left.toFixed(3)}% + 3px);width:calc(${width.toFixed(3)}% - 6px);
-                 ${fill};border-left-color:${p.color};color:${p.ink};">
+                 ${fill};color:${p.ink};
+                 ${v.accent ? `border:2px solid ${v.accent};border-left:4px solid ${v.accent};`
+                            : `border-left-color:${p.color};`}">
           <div class="wk-ev-who">${p.name}${clash ? ' ⚠' : ''}</div>
           <div class="wk-ev-what">${busy ? 'Busy' : v.what}</div>
           <div class="wk-ev-time">${wkT(v.s)}–${wkT(v.e)}</div>
