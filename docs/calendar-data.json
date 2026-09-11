@@ -199,6 +199,17 @@
     "notes": "GSL C3 event 3 \u00b7 Mead C3 HOME vs Lewis & Clark C3"
   },
   {
+    "id": "ev-sysa-pictures-20260919-kj",
+    "title": "KJ SYSA Pictures",
+    "type": "commitment",
+    "status": "booked",
+    "start": "2026-09-19",
+    "end": "2026-09-19",
+    "time": "09:15",
+    "who": "KJ",
+    "notes": "SYSA team pictures \u00b7 Evergreen"
+  },
+  {
     "id": "ev-soc-20260919-1010-kj",
     "title": "KJ Soccer vs DPM",
     "type": "game",
