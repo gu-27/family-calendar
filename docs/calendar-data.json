@@ -232,6 +232,17 @@
     "notes": "GSL C3 event 4 \u00b7 Mead C3 AWAY at Mt Spokane C3"
   },
   {
+    "id": "ev-vb-20260923-ml",
+    "title": "ML Volleyball vs Assumption",
+    "type": "game",
+    "status": "booked",
+    "start": "2026-09-23",
+    "end": "2026-09-23",
+    "time": "17:00",
+    "who": "ML",
+    "notes": "HOME vs Assumption \u00b7 STM"
+  },
+  {
     "id": "ev-vb-20260923-k",
     "title": "K Volleyball vs University",
     "type": "game",
@@ -274,6 +285,17 @@
     "time": "18:00",
     "who": "K",
     "notes": "GSL C3 event 6 \u00b7 Mead C3 HOME vs Shadle Park C3"
+  },
+  {
+    "id": "ev-vb-20260930-ml",
+    "title": "ML Volleyball vs Valley Catholic",
+    "type": "game",
+    "status": "booked",
+    "start": "2026-09-30",
+    "end": "2026-09-30",
+    "time": "17:00",
+    "who": "ML",
+    "notes": "HOME vs Valley Catholic \u00b7 STM"
   },
   {
     "id": "ev-vb-20260930-k",
@@ -353,6 +375,17 @@
     "notes": "AWAY at 9MF [Schumaker] Red \u00b7 Dwight Merkel Complex (DMC) \u2013 3A"
   },
   {
+    "id": "ev-vb-20261012-ml",
+    "title": "ML Volleyball vs St. Aloysius White",
+    "type": "game",
+    "status": "booked",
+    "start": "2026-10-12",
+    "end": "2026-10-12",
+    "time": "17:00",
+    "who": "ML",
+    "notes": "HOME vs St. Aloysius White \u00b7 STM"
+  },
+  {
     "id": "ev-vb-20261012-k",
     "title": "K Volleyball at Lewis & Clark",
     "type": "game",
@@ -362,6 +395,17 @@
     "time": "18:00",
     "who": "K",
     "notes": "GSL C3 event 10 \u00b7 Mead C3 AWAY at Lewis & Clark C3"
+  },
+  {
+    "id": "ev-vb-20261014-ml",
+    "title": "ML Volleyball vs All Saints 6th",
+    "type": "game",
+    "status": "booked",
+    "start": "2026-10-14",
+    "end": "2026-10-14",
+    "time": "17:00",
+    "who": "ML",
+    "notes": "HOME vs All Saints 6th \u00b7 STM"
   },
   {
     "id": "ev-vb-20261014-k",
@@ -406,6 +450,17 @@
     "time": "18:00",
     "who": "K",
     "notes": "GSL C3 event 12 \u00b7 Mead C3 AWAY at University C3"
+  },
+  {
+    "id": "ev-vb-20261021-ml",
+    "title": "ML Volleyball at St. Charles/Trinity",
+    "type": "game",
+    "status": "booked",
+    "start": "2026-10-21",
+    "end": "2026-10-21",
+    "time": "17:00",
+    "who": "ML",
+    "notes": "AWAY at St. Charles/Trinity \u00b7 Trinity"
   },
   {
     "id": "ev-vb-20261021-k",
